@@ -1,47 +1,36 @@
 package com.example.gerenciadordeatividades
 
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.gerenciadordeatividades.ui.theme.GerenciadorDeAtividadesTheme
+import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import com.example.gerenciadordeatividades.data.datastore.TaskManager
+import com.example.gerenciadordeatividades.domain.model.Task
+import com.example.gerenciadordeatividades.domain.model.TaskStatus
+import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            GerenciadorDeAtividadesTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+
+        val taskManager = TaskManager(this)
+
+        lifecycleScope.launch {
+
+            val newTask = Task(
+                id = 2,
+                title = "Testreqe",
+                description = "Teste datastore",
+                status = TaskStatus.PENDING,
+                deadline = System.currentTimeMillis() + 86_400_000
+            )
+            taskManager.addTask(newTask)
+            Log.d("DATASTORE", "Tarefa salva: $newTask")
+
+            taskManager.tasks.collect { tasks ->
+                Log.d("DATASTORE", "Tarefas lidas: $tasks")
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GerenciadorDeAtividadesTheme {
-        Greeting("Android")
     }
 }

@@ -53,4 +53,6 @@ out/
 # OS specific
 Thumbs.db
 .DS_Store
+Rebuild/
+Clean/
 

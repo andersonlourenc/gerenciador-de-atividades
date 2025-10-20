@@ -1,37 +1,35 @@
 package com.example.gerenciadordeatividades
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import androidx.lifecycle.lifecycleScope
-import com.example.gerenciadordeatividades.data.datastore.TaskManager
-import com.example.gerenciadordeatividades.domain.model.Task
-import com.example.gerenciadordeatividades.domain.model.TaskStatus
-import kotlinx.coroutines.launch
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.gerenciadordeatividades.ui.screens.HomeScreen
+import com.example.gerenciadordeatividades.ui.theme.GerenciadorDeAtividadesTheme
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContent {
+            GerenciadorDeAtividadesTheme {
+                Surface(color = MaterialTheme.colorScheme.background) {
 
-        val taskManager = TaskManager(this)
+                    val navController = rememberNavController()
 
-        lifecycleScope.launch {
-
-            val newTask = Task(
-                id = 2,
-                title = "Testreqe",
-                description = "Teste datastore",
-                status = TaskStatus.PENDING,
-                deadline = System.currentTimeMillis() + 86_400_000
-            )
-            taskManager.addTask(newTask)
-            Log.d("DATASTORE", "Tarefa salva: $newTask")
-
-            taskManager.tasks.collect { tasks ->
-                Log.d("DATASTORE", "Tarefas lidas: $tasks")
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home"
+                    ) {
+                        composable("home") {
+                            HomeScreen()
+                        }
+                    }
+                }
             }
         }
     }
 }
-

@@ -1,7 +1,6 @@
 package com.example.gerenciadordeatividades.domain.model
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
 
 @Serializable
 data class  Task(
@@ -11,7 +10,8 @@ data class  Task(
     val status: TaskStatus = TaskStatus.PENDING,
     val deadline: Long? = null,
     val imageUri: String? = null,
-    val finalized: Boolean = false
+    val finalized: Boolean = false,
+    val date: String
 )
 
 enum class TaskStatus {

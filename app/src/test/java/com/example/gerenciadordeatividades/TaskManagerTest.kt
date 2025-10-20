@@ -4,7 +4,6 @@ import kotlinx.coroutines.test.runTest
 import androidx.datastore.core.DataStoreFactory
 import com.example.gerenciadordeatividades.data.datastore.TaskSerializer
 import com.example.gerenciadordeatividades.domain.model.Task
-import com.example.gerenciadordeatividades.domain.model.TaskStatus
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.flow.first
 import org.junit.Test
@@ -25,7 +24,6 @@ class TaskManagerTest {
             id = 1,
             title = "Criar UI",
             description = "interface de maneira intuitiva",
-            status = TaskStatus.PENDING
         )
 
         dataStore.updateData { current -> current + task }

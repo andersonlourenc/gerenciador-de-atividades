@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface TaskRepository {
     fun getTasks(): Flow<List<Task>>
-    suspend fun addTask(task: Task)
+    suspend fun insertTask(task: Task)
     suspend fun updateTask(task: Task)
-    suspend fun deleteTaskByTitle(title: String)
+    suspend fun deleteTask(task: Task)
     suspend fun deleteExpiredTasks(now: Long = System.currentTimeMillis())
 }

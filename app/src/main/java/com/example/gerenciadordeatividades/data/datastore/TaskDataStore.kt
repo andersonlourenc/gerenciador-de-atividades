@@ -19,15 +19,15 @@ class TaskManager(private val context: Context) {
         .catch { emit(emptyList()) }
         .map { it }
 
-    suspend fun addTask(task: Task) {
+    suspend fun insertTask(task: Task) {
         context.taskDataStore.updateData { currentTasks ->
             currentTasks + task
         }
     }
 
-    suspend fun removeTaskByTitle(title: String) {
+    suspend fun removeTaskById(id: Int) {
         context.taskDataStore.updateData { currentTasks ->
-            currentTasks.filterNot { it.title == title }
+            currentTasks.filterNot { it.id == id }
         }
     }
 

@@ -11,29 +11,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gerenciadordeatividades.domain.model.Task
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gerenciadordeatividades.domain.model.TaskStatus
+import com.example.gerenciadordeatividades.ui.viewmodel.TaskViewModel
+
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
 
-    val tasks = remember { mutableStateListOf<Task>() }
+    val tasks by viewModel.tasks.collectAsState()
+    var showAddTaskModal by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("Todos") }
-
-    fun addTask(title: String, description: String, status: TaskStatus = TaskStatus.PENDING) {
-        val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
-        val newTask = Task(
-            id = tasks.size + 1,
-            title = title,
-            description = description,
-            status = status,
-            date = date
-        )
-        tasks.add(newTask)
-    }
 
     val filteredTasks = when (selectedFilter) {
         "Pendentes" -> tasks.filter { it.status == TaskStatus.PENDING }
@@ -46,14 +40,9 @@ fun HomeScreen() {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    addTask(
-                        title = "Nova atividade ${tasks.size + 1}",
-                        description = "Descrição atividade ${tasks.size + 1}"
-                    )
+                    showAddTaskModal = true
                 },
                 containerColor = MaterialTheme.colorScheme.primary
-
-
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Adicionar atividade")
             }
@@ -80,13 +69,19 @@ fun HomeScreen() {
                     "Em andamento" to tasks.count { it.status == TaskStatus.IN_PROGRESS },
                     "Concluídos" to tasks.count { it.status == TaskStatus.COMPLETED },
 
-                )
+                    )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn (verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(filteredTasks) { task ->
+
+                    var formatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    } }
+                    val dataFormadata = formatter.format(Date(task.deadline))
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -106,7 +101,7 @@ fun HomeScreen() {
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Data: ${task.date ?: "Sem data"}",
+                                text = "Data Limite: $dataFormadata",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.secondary
                             )
@@ -115,6 +110,16 @@ fun HomeScreen() {
                 }
             }
         }
+    }
+
+
+    if (showAddTaskModal) {
+        AddTaskModal(
+            onDismiss = {
+                showAddTaskModal = false
+            },
+            viewModel = viewModel
+        )
     }
 }
 
@@ -169,28 +174,5 @@ fun FilterButton(
         modifier = modifier.height(60.dp)
     ) {
         Text("$text ($count)")
-    }
-}
-
-@Composable
-fun TaskItem(task: Task) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        Text(text = task.title, fontSize = 18.sp)
-        Text(
-            text = task.status.name,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.secondary
-        )
-        if (!task.description.isNullOrBlank()) {
-            Text(
-                text = task.description ?: "",
-                fontSize = 14.sp,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
     }
 }

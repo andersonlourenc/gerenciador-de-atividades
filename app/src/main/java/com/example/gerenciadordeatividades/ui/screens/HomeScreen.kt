@@ -1,29 +1,31 @@
 package com.example.gerenciadordeatividades.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.gerenciadordeatividades.domain.model.TaskStatus
 import com.example.gerenciadordeatividades.ui.viewmodel.TaskViewModel
-
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
+fun HomeScreen(viewModel: TaskViewModel = viewModel(), navController: NavHostController) {
 
     val tasks by viewModel.tasks.collectAsState()
     var showAddTaskModal by remember { mutableStateOf(false) }
@@ -37,6 +39,15 @@ fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
     }
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Gerenciador de Atividades",
+                    )
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -54,11 +65,6 @@ fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            Text(
-                text = "Gerenciador de Atividades",
-                fontSize = 22.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
             FilterButtonGrid(
                 selectedFilter = selectedFilter,
@@ -84,7 +90,10 @@ fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
 
                     Card(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate("details/${task.id}")
+                            },
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
@@ -112,7 +121,6 @@ fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
         }
     }
 
-
     if (showAddTaskModal) {
         AddTaskModal(
             onDismiss = {
@@ -122,7 +130,6 @@ fun HomeScreen(viewModel: TaskViewModel = viewModel ()) {
         )
     }
 }
-
 
 @Composable
 fun FilterButtonGrid(

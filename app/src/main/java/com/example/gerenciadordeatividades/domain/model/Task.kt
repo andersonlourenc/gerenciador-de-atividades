@@ -4,16 +4,16 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class  Task(
-    val id: Int,
+    val id: String,
     val title: String,
     val description: String? = null,
     val status: TaskStatus = TaskStatus.PENDING,
-    val deadline: Long? = null,
-    val imageUri: String? = null,
-    val finalized: Boolean = false,
-    val date: String
+    val deadline: Long,
+    val imageUri: String? = null
+
 )
 
+@Serializable
 enum class TaskStatus {
     PENDING,
     IN_PROGRESS,

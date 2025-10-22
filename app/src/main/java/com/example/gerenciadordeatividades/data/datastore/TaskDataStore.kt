@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.example.gerenciadordeatividades.domain.model.Task
+import com.example.gerenciadordeatividades.domain.model.TaskStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.util.Calendar
 
 private val Context.taskDataStore: DataStore<List<Task>> by dataStore(
     fileName = "tasks.json",
@@ -25,7 +27,7 @@ class TaskManager(private val context: Context) {
         }
     }
 
-    suspend fun removeTaskById(id: Int) {
+    suspend fun removeTaskById(id: String) {
         context.taskDataStore.updateData { currentTasks ->
             currentTasks.filterNot { it.id == id }
         }
@@ -38,8 +40,20 @@ class TaskManager(private val context: Context) {
     }
 
     suspend fun clearExpiredTasks(currentTime: Long) {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = currentTime
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startOfTodayMillis = calendar.timeInMillis
+
         context.taskDataStore.updateData { currentTasks ->
-            currentTasks.filter { it.deadline?.let { d -> d >= currentTime } ?: true }
+
+            currentTasks.filter { task ->
+                task.status == TaskStatus.COMPLETED || task.deadline >= startOfTodayMillis
+            }
         }
     }
 }

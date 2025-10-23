@@ -3,10 +3,12 @@ package com.example.gerenciadordeatividades.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,12 +41,14 @@ fun TaskDetailsScreen(
         }
     }
 
+    var showEditModal by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        task?.title ?: "Carregando Atividade...",
+                        task?.title ?: "",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -54,6 +58,18 @@ fun TaskDetailsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
                     }
                 },
+                actions = {
+                    if (task != null) {
+                        IconButton(onClick = {
+                            showEditModal = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar Atidade"
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { innerPadding ->

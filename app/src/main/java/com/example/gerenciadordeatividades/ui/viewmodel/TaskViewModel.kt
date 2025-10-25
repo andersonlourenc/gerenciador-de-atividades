@@ -24,7 +24,11 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     fun loadTasks() {
         viewModelScope.launch {
             repository.getTasks().collect { tasksList ->
-                _tasks.value = tasksList
+
+                val sortedList = tasksList.sortedBy { it.deadline }
+                val sortedListFinal = sortedList.sortedBy { it.status == TaskStatus.COMPLETED }
+
+                _tasks.value = sortedListFinal
             }
         }
     }

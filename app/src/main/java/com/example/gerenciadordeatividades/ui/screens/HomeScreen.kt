@@ -148,7 +148,7 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
                                                 )
                                             },
                                             onClick = {
-                                                showDeleteConfirmationDialog = task
+                                                viewModel.deleteTask(task)
                                                 expandedMenuTaskId = null
                                             },
                                             leadingIcon = {

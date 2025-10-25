@@ -1,5 +1,6 @@
 package com.example.gerenciadordeatividades.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,14 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
 import com.example.gerenciadordeatividades.domain.model.Task
 import com.example.gerenciadordeatividades.domain.model.TaskStatus
+import com.example.gerenciadordeatividades.ui.util.getStatusInfo
 import com.example.gerenciadordeatividades.ui.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +36,7 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
     var selectedFilter by remember { mutableStateOf("Todos") }
 
     var expandedMenuTaskId by remember { mutableStateOf<String?>(null) }
-    var taskToEdit: Task? by remember{ mutableStateOf<Task?>(null) }
+    var taskToEdit: Task? by remember { mutableStateOf<Task?>(null) }
 
     var showDeleteConfirmationDialog by remember { mutableStateOf<Task?>(null) }
 
@@ -49,17 +51,17 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "Gerenciador de Atividades",
-                    )
-                }
+                    Text(text = "Gerenciador de Atividades")
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    showAddTaskModal = true
-                },
+                onClick = { showAddTaskModal = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Adicionar atividade")
@@ -81,8 +83,7 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
                     "Pendentes" to tasks.count { it.status == TaskStatus.PENDING },
                     "Em andamento" to tasks.count { it.status == TaskStatus.IN_PROGRESS },
                     "Concluídos" to tasks.count { it.status == TaskStatus.COMPLETED },
-
-                    )
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -90,73 +91,66 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(filteredTasks) { task ->
 
-                    var formatter = remember {
+                    val formatter = remember {
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
                             timeZone = TimeZone.getTimeZone("UTC")
                         }
                     }
-                    val dataFormadata = formatter.format(Date(task.deadline))
+                    val dataFormatada = formatter.format(Date(task.deadline))
                     val isMenuExpanded = expandedMenuTaskId == task.id
 
                     Card(
                         modifier = Modifier
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .clickable { navController.navigate("details/${task.id}") },
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceVariant)
+                        elevation = CardDefaults.cardElevation(6.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .clickable {
-                                        navController.navigate("details/${task.id}")
-                                    }
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
                                     text = task.title,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Text(
-                                    text = task.description ?: "",
-                                    fontSize = 14.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Data Limite: $dataFormadata",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            }
-                            Box(
-                                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
-                            ) {
-                                IconButton(onClick = { expandedMenuTaskId = task.id }) {
-                                    Icon(
-                                        imageVector = Icons.Default.MoreVert,
-                                        contentDescription = "Opções da Atividade"
-                                    )
-                                }
-                                DropdownMenu(
-                                    expanded = isMenuExpanded,
-                                    onDismissRequest = { expandedMenuTaskId = null }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Editar Atividade") },
-                                        onClick = {
-                                            taskToEdit = task
-                                            expandedMenuTaskId = null
-                                        },
-                                        leadingIcon = {
-                                            Icon(Icons.Default.Edit, contentDescription = "Editar")
-                                        }
-                                    )
 
-                                    DropdownMenuItem(
-                                        text = { Text("Excluir Atividade", color = MaterialTheme.colorScheme.error) },
+                                Box {
+                                    IconButton(onClick = { expandedMenuTaskId = task.id }) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "Opções da Atividade"
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = isMenuExpanded,
+                                        onDismissRequest = { expandedMenuTaskId = null }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("Editar Atividade") },
+                                            onClick = {
+                                                taskToEdit = task
+                                                expandedMenuTaskId = null
+                                            },
+                                            leadingIcon = {
+                                                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    "Excluir Atividade",
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                            },
                                             onClick = {
                                                 showDeleteConfirmationDialog = task
-                                            expandedMenuTaskId = null
-                                        },
+                                                expandedMenuTaskId = null
+                                            },
                                             leadingIcon = {
                                                 Icon(
                                                     imageVector = Icons.Default.Delete,
@@ -165,29 +159,38 @@ fun HomeScreen(viewModel: TaskViewModel, navController: NavHostController) {
                                                 )
                                             }
                                         )
+                                    }
                                 }
                             }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Data limite: $dataFormatada",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                StatusChip(task.status)
+                            }
                         }
+
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }
     }
 
-
     if (showAddTaskModal) {
-        AddTaskModal(
-            onDismiss = {
-                showAddTaskModal = false
-            },
-            viewModel = viewModel
-        )
+        AddTaskModal(onDismiss = { showAddTaskModal = false }, viewModel = viewModel)
     }
 
-    val currentTaskToEdit = taskToEdit
-    if (currentTaskToEdit != null) {
+    taskToEdit?.let {
         EditTaskModal(
-            taskToEdit = currentTaskToEdit,
+            taskToEdit = it,
             onDismiss = { taskToEdit = null },
             viewModel = viewModel
         )
@@ -209,8 +212,7 @@ fun FilterButtonGrid(
         filtros.forEach { linha ->
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 linha.forEach { filtro ->
                     FilterButton(
@@ -234,15 +236,51 @@ fun FilterButton(
     count: Int,
     modifier: Modifier = Modifier
 ) {
+
+    val containerColor: Color
+    val contentColor: Color
+    val border: BorderStroke?
+
+    if (selected) {
+        containerColor = MaterialTheme.colorScheme.background
+        contentColor = MaterialTheme.colorScheme.primary
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+    } else {
+        containerColor = MaterialTheme.colorScheme.primary
+        contentColor = MaterialTheme.colorScheme.onPrimary
+        border = null
+    }
+
     Button(
         onClick = onClick,
-        colors = if (selected)
-            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-        else
-            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier.height(60.dp)
+        modifier = modifier.height(56.dp),
+        border = border
     ) {
         Text("$text ($count)")
+    }
+}
+
+@Composable
+fun StatusChip(status: TaskStatus) {
+
+    val (label, textColor) = getStatusInfo(status)
+
+    Surface(
+        color = Color.Transparent,
+        border = BorderStroke(1.dp, textColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Text(
+            text = label,
+            color = textColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
     }
 }

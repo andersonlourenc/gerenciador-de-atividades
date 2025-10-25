@@ -6,13 +6,11 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,22 +18,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
@@ -50,12 +53,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
 import com.example.gerenciadordeatividades.domain.model.Task
 import com.example.gerenciadordeatividades.domain.model.TaskStatus
 import com.example.gerenciadordeatividades.ui.viewmodel.TaskViewModel
@@ -63,6 +64,7 @@ import java.lang.Exception
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.gerenciadordeatividades.ui.util.getStatusInfo
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,8 +81,6 @@ fun EditTaskModal(
     var selectedStatus by remember { mutableStateOf(taskToEdit.status) }
     var imageUri by remember { mutableStateOf(taskToEdit.imageUri?.let { Uri.parse(it) }) }
 
-
-
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -95,25 +95,7 @@ fun EditTaskModal(
                     context.contentResolver.takePersistableUriPermission(uri, flag)
                     imageUri = uri
                 } catch (e: Exception) {
-                    Log.e("ImagePicker", "[Edit] Erro permissão PickVisualMedia: ${e.message}", e)
-                    imageUri = uri // Fallback
-                }
-            }
-        }
-    )
-
-    val getContentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            if (uri != null) {
-                try {
-                    val flag = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    context.contentResolver.takePersistableUriPermission(uri, flag)
                     imageUri = uri
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    imageUri = uri
-
                 }
             }
         }
@@ -140,6 +122,7 @@ fun EditTaskModal(
         }
     )
     var showDatePicker by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
 
     if (showDatePicker) {
@@ -188,9 +171,11 @@ fun EditTaskModal(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp, top = 24.dp)
+                .verticalScroll(scrollState),
+
+            ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -207,6 +192,8 @@ fun EditTaskModal(
                     Icon(Icons.Default.Close, contentDescription = "Fechar")
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = title,
@@ -226,22 +213,22 @@ fun EditTaskModal(
 
                 )
             )
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text("Status:", style = MaterialTheme.typography.bodyMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TaskStatus.values().forEach { status ->
-                    FilterChip(
-                        selected = (selectedStatus == status),
-                        onClick = { selectedStatus = status },
-                        label = { Text(getStatusText(status)) },
-                        shape = RoundedCornerShape(12.dp),
 
+            ImageAndStatusRow(
+                imageUri = imageUri,
+                onPickImage = {
+                    pickImageLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
-                }
-            }
+                },
+                onRemoveImage = { imageUri = null },
+                selectedStatus = selectedStatus,
+                onStatusSelected = { selectedStatus = it }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = description,
@@ -272,46 +259,7 @@ fun EditTaskModal(
                     }
                 }
             )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (imageUri == null) {
-                    TextButton(
-                        onClick = {
-                            pickImageLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Image,
-                            contentDescription = "Adicionar imagem",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text("Adicionar imagem", style = MaterialTheme.typography.labelLarge)
-                    }
-                } else {
-                    TextButton(
-                        onClick = { imageUri = null },
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Remover imagem",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text("Remover imagem", style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = selectedDateString,
@@ -338,11 +286,10 @@ fun EditTaskModal(
 
                     focusedLabelColor = MaterialTheme.colorScheme.primary,
                     unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
@@ -382,4 +329,99 @@ private fun getTodayUtcStartMillis(): Long {
         .atStartOfDay(utcZoneId)
         .toInstant()
         .toEpochMilli()
+}
+
+@Composable
+fun ImageAndStatusRow(
+    imageUri: Uri?,
+    onPickImage: () -> Unit,
+    onRemoveImage: () -> Unit,
+    selectedStatus: TaskStatus,
+    onStatusSelected: (TaskStatus) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Imagem:", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = { if (imageUri == null) onPickImage() else onRemoveImage() },
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = if (imageUri == null) Icons.Default.Image else Icons.Default.Clear,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(if (imageUri == null) "Adicionar" else "Remover")
+            }
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Status:", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Box {
+                OutlinedButton(
+                    onClick = { expanded = true },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, getStatusInfo(selectedStatus).second),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = getStatusInfo(selectedStatus).second
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val (statusText, statusColor) = getStatusInfo(selectedStatus)
+
+                    Text(
+                        text = statusText,
+                        color = statusColor,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        tint = statusColor
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    TaskStatus.values().forEach { status ->
+                        val (statusText, statusColor) = getStatusInfo(status)
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = statusText,
+                                    color = statusColor
+                                )
+                            },
+                            onClick = {
+                                onStatusSelected(status)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

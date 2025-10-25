@@ -45,12 +45,6 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         }
     }
 
-    fun updateTaskStatus(taskToUpdate: Task, newStatus: TaskStatus) {
-        viewModelScope.launch {
-            val updatedTask = taskToUpdate.copy(status = newStatus)
-            repository.updateTask(updatedTask)
-        }
-    }
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {

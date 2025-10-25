@@ -16,6 +16,6 @@ class TaskViewModelFactory(
             return TaskViewModel(repository) as T
         }
 
-        throw IllegalArgumentException("dfonsdo")
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

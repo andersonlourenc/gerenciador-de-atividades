@@ -119,7 +119,7 @@ fun TaskDetailsScreen(
                         val (statusTask, statusColor) = getStatusInfo(task.status)
 
                         Surface(
-                            color = statusColor.copy(alpha = 0.1f),
+
                             shape = RoundedCornerShape(12.dp),
                             border = BorderStroke(1.dp, statusColor)
                         ) {

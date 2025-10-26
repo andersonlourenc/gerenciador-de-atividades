@@ -67,7 +67,7 @@ O projeto cobriu os Requisitos Obrigatórios
 ---
 #### Mostrando o teste
 
-**[Explicativo das telas](https://drive.google.com/file/d/17TsmTIkYLUFgg9uil0EYlwd0UlYKQSmq/view?usp=drive_link)**
+* **[Explicativo das telas](https://drive.google.com/file/d/17TsmTIkYLUFgg9uil0EYlwd0UlYKQSmq/view?usp=drive_link)**
 * **[APK do Teste](https://drive.google.com/file/d/1Hcfnixz_tHh0CYnzuvRt-ypqwxMHAcqG/view?usp=drive_link)**
 * **[Vídeo de Demonstração](https://drive.google.com/file/d/1if8EBL7k_UO2RWeAeFi6gPj8RqBeDea3/view?usp=drive_link)**
 
